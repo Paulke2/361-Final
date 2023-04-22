@@ -12,10 +12,20 @@ struct process {
 };
 
 int main(){
+    //main will read in input and get the list of input.
+    //lines allocates room for 50 strings of length 100. our while condition keeps
+    //reading lines from the input file until the line is NULL(i.e. last line of file) andkeep adding
+    //the lines to the lines matrix which when the while condition false, holds all input lines
     FILE *file = fopen("input.txt","r");
+    char lines[50][100];
     char buffer[100];
-    fgets(buffer,100,file);
-    printf("%s",buffer[0]);
+    int index =0;
+    while(fgets(buffer,100,file)!=NULL){
+        strcpy(lines[index],buffer);
+        index++;
+    }
+    printf("%s",lines[0]);
+    printf("%s",buffer);
     fclose(file);
     return 0;
 }
