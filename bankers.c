@@ -2,41 +2,36 @@
 #include <string.h>
 #include <stdlib.h>
 
-int bankers(int numResources, int numProcesses, int *available, int *max, int *allocated, int *need){
-    int f[numProcesses], safeSequence[numProcesses], work[numResources], count = 0;
-    for(int i = 0; i < numResources; i++){
-        work[i] = available[i];
+int bankers(int requesting, int requestedNum, int numProcesses, int available, int *max, int *allocated, int *need){
+    int safeSequence[numProcesses], count = 0;
+    if(allocated[requesting] + requestedNum > max[requesting]){
+        printf("Error: Process %d is requesting more than its max resources.\n", requesting);
+        return -1;
     }
+    allocated[requesting] += requestedNum;
+    need[requesting] -= requestedNum;
+    available -= requestedNum;
     for(int i = 0; i < numProcesses; i++){
-        f[i] = 0;
-    }
-    int index = 0;
-    while(count < numProcesses){
-        int found = 0;
-        for(int i = 0; i < numProcesses; i++){
-            if(f[i] == 0){
-                int j;
-                for(j = 0; j < numResources; j++){
-                    if(need[i * numResources + j] > work[j]){
-                        break;
-                    }
-                }
-                if(j == numResources){
-                    for(int k = 0; k < numResources; k++){
-                        work[k] += allocated[i * numResources + k];
-                    }
-                    safeSequence[index++] = i;
-                    f[i] = 1;
-                    found = 1;
-                    count++;
-                }
-            }
-        }
-        if(found == 0){
-            printf("System is not in safe state\n");
-            return 0;
+        if(need[i] <= available){
+            safeSequence[count++] = i;
+            available += allocated[i];
         }
     }
-
+    if(count != numProcesses){
+        printf("Error: System is in an unsafe state.\n");
+        return -1;
+    }
+    printf("Safe sequence: ");
+    for(int i = 0; i < numProcesses; i++){
+        printf("%d ", safeSequence[i]);
+    }
+    printf("\n");
+    return 0;
+}
+int main(){
+    int max[4] = {4, 3, 2, 1};
+    int allocated[4] = {1, 0, 1, 0};
+    int need[4] = {3, 3, 1, 1};
+    bankers(0, 1, 4, 5, max, allocated, need);
     return 0;
 }
