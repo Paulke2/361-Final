@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "bankers.h"
 //below is the structure for a job/process.
 struct process {
    int processID;
