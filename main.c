@@ -2,53 +2,69 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-// below is the structure for a job/process.
-struct process
+#include "queue_functions.c"
+
+int getInternalEventTime(struct process *ready_queue,int quantum,int time_passed)
 {
-    int processID;
-    int priority;
-    int burstTime;
-    int memoryRequested;
-    int maxDevices;
-    struct process *next;
-};
-int getNumber(char command_instruction[50])
-{
-    // this function cuts of first 2 chars, then returns the int
-    char temp[50];
-    int length = strlen(command_instruction);
-    for (int i = 2; i < length; i++)
-    {
-        temp[i - 2] = command_instruction[i];
+    if(ready_queue==NULL){
+        //if ready_queue mt, we need to read a new instruction so internal_event_time needs to be > next_instruction_time so we set internal_event_time to be arbitrary large number
+        return 9999999;
     }
-    return atoi(temp);
+    else{
+        if(ready_queue->burstTime>=quantum){
+            return time_passed+quantum;
+        }else{
+            //process will not finish quantum and we need to return curr time +remaining burstTime
+            return time_passed+ready_queue->burstTime;
+        }
+    }
 }
-void schedule(char (*instructions)[100], int number_of_strings)
+
+void schedule()
 {
-    struct process *hold_queue1=NULL;
-    struct process *hold_queue2=NULL;
-    // this function handles instructions it will keep reading the first line until there are no more instructions to read.
-    int instruction_cout = 0;
+    struct process *hold_queue1 = NULL;
+    struct process *hold_queue2 = NULL;
+    struct process *ready_queue = NULL;
+    struct process *wait_queue = NULL;
+    struct process *finished_queue = NULL;
     // if there are no processes on ready or wait, we will increment time_passed by 1
     int time_passed = 0;
     // system config. options
     int sys_memory = 0;
+    int used_memory = 0;
     int sys_serial_devices = 0;
     int quantum = 0;
-    while (instructions[instruction_cout][0] != NULL)
+    FILE *file = fopen("input.txt", "r");
+    char buffer[100];
+    const char *empty = "empty";
+    strcpy(buffer, empty);
+    int next_instruction_time = 0;
+    int internal_event_time = 99;
+    while (true)
     {
-        char temp[50];
-        // copy original strigns as strtok modifies original string. if time passed<arrival, reset string
-        strcpy(temp, instructions[instruction_cout]);
-        if (instructions[instruction_cout][0] == 'C')
+        if ((strcmp(buffer, "empty") == 0))
         {
-            // sys. config
-            char *token = strtok(instructions[instruction_cout], " ");
-            token = strtok(NULL, " ");
-            int arrival = atoi(token);
-            printf("arrival time:%d\n", arrival);
-            printf("current time:%d\n", time_passed);
-            if (arrival <= time_passed)
+            // if the instruction read time has passed, and there is no outstanding instruction
+            fgets(buffer, 100, file);
+        }
+        if (buffer == NULL)
+        {
+            next_instruction_time = 99999999;
+            printf("%s", "No more instructions to read");
+        }
+        char temp[100];
+        strcpy(temp, buffer);
+        char *token = strtok(temp, " ");
+        char instruction_type[100];
+        strcpy(instruction_type, token);
+        token = strtok(NULL, " ");
+        next_instruction_time = atoi(token);
+
+        internal_event_time=getInternalEventTime(ready_queue,quantum,time_passed);
+        if (next_instruction_time < internal_event_time)
+        {
+            // read new instruction
+            if (strcmp(instruction_type, "C") == 0)
             {
                 printf("-----Configuring----\n");
                 token = strtok(NULL, " ");
@@ -60,113 +76,96 @@ void schedule(char (*instructions)[100], int number_of_strings)
                 token = strtok(NULL, " ");
                 quantum = getNumber(token);
                 printf("quantum: %d\n", sys_serial_devices);
-                // if success, increase instruction count
-                instruction_cout++;
+                printf("------------------\n");
+                strcpy(buffer, empty);
             }
-            else
+            else if (strcmp(instruction_type, "A") == 0)
             {
-                strcpy(instructions[instruction_cout], temp);
-            }
-        }
-        else if (instructions[instruction_cout][0] == 'A')
-        {
-            // job arrival
-            char *token = strtok(instructions[instruction_cout], " ");
-            token = strtok(NULL, " ");
-            int arrival = atoi(token);
-            printf("job arrival time:%d\n", arrival);
-            printf("current time:%d\n", time_passed);
-            if (arrival <= time_passed)
-            {
-                int job_number = 0;
-                int process_mem = 0;
-                int process_devices = 0;
-                int burst_time = 0;
-                int priority = 0;
-                printf("----New job-------\n");
-                token = strtok(NULL, " ");
-                job_number = getNumber(token);
-                printf("job_number %d\n", job_number);
-                token = strtok(NULL, " ");
-                process_mem = getNumber(token);
-                printf("process_mem: %d\n", process_mem);
-                token = strtok(NULL, " ");
-                process_devices = getNumber(token);
-                printf("process_devices: %d\n", process_devices);
-                token = strtok(NULL, " ");
-                burst_time = getNumber(token);
-                printf("burst_time: %d\n", burst_time);
-                token = strtok(NULL, " ");
-                priority = getNumber(token);
-                printf("priority: %d\n", priority);
-                printf("-----------------\n");
-
-                
-                // creating a new process
-                struct process *newJob = (struct process *)malloc(sizeof(struct process));
-                newJob->processID = job_number;
-                newJob->priority = priority;
-                newJob->burstTime = burst_time;
-                newJob->memoryRequested = process_mem;
-                newJob->maxDevices = process_devices;
-                newJob->next = NULL;
-                // if success, increase instruction count
-                instruction_cout++;
-                if(hold_queue1==NULL){
-                    //if the queue is mt assign head
-                    hold_queue1=newJob;
-                }else{
-                    struct process *temp=hold_queue1;
-                    while(temp->next != NULL){
-                        temp=temp->next;
+                struct process *newJob = createNewProcess(token);
+                strcpy(buffer, empty);
+                // determine if enough total mem.
+                if (newJob->memoryRequested > sys_memory)
+                {
+                    // discard job
+                }
+                else if (newJob->memoryRequested <= sys_memory - used_memory)
+                {
+                    // if their is enough mem. add job to ready_queue
+                    ready_queue=addToQueue(newJob, ready_queue);
+                    used_memory = used_memory + newJob->memoryRequested;
+                }
+                else
+                {
+                    // if not enough mem. add to hold queue
+                    if(newJob->priority==2){
+                        hold_queue2=addToQueue(newJob, hold_queue2);
                     }
-                    temp->next=newJob;
+                    else{
+                        //instead of adding to queue1 with addToQueue, create a method that accepts the same parameters as addToQueue, loop through hold_queue1, 
+                        //once curr->next->bursttime > newJob->burst_time, do something like newJob->next = curr->next. then curr->next=newJob. or some variation of inserting in the
+                        //middle of a linked list
+                        hold_queue1=addToQueue(newJob, hold_queue1);
+                    }
                 }
             }
+            else if (strcmp(instruction_type, "Q") == 0)
+            {
+                //device request
+                strcpy(buffer, empty);
+            }
+            else if (strcmp(instruction_type, "L") == 0)
+            {
+                //device release request
+                strcpy(buffer, empty);
+            }
             else
             {
-                strcpy(instructions[instruction_cout], temp);
+                strcpy(buffer, empty);
             }
-        }
-        else if (instructions[instruction_cout][0] == 'Q')
-        {
-            // device request
-            instruction_cout++;
-        }
-        else if (instructions[instruction_cout][0] == 'L')
-        {
-            // release device request
-            instruction_cout++;
         }
         else
         {
-            // else we want to print the current system status/D instruction
-            instruction_cout++;
+            // else process internal event. there are no more instructions that need to be read.
+            if (ready_queue != NULL)
+            {
+                if (ready_queue->burstTime - quantum > 0)
+                {
+                    time_passed = time_passed + quantum;
+                    ready_queue->burstTime = ready_queue->burstTime - quantum;
+                    // now we need to bring head to tail
+                    struct process *temp = duplicateProcess(ready_queue);
+                    //printf("jobNumber %d has %d run time left\n",ready_queue->processID,ready_queue->burstTime);
+                    ready_queue=addToQueue(temp, ready_queue);
+                    ready_queue = ready_queue->next;
+                    printQueue(ready_queue);
+                }
+                else
+                {
+                    // job complete. job scheduler should check if holdqueue 1 process has enough mem. then check hold queue 2 if enough resources
+                    time_passed = time_passed + ready_queue->burstTime;
+                    ready_queue->burstTime = 0;
+                    struct process *completed_job = duplicateProcess(ready_queue);
+                    // add ready_queue head to finished queue and remove process from ready_queue. release devices/mem. and check waitqueue for device requests
+                    used_memory = used_memory - ready_queue->memoryRequested;
+                    printf("finished Job number: %d\n",ready_queue->processID);
+                    finished_queue=addToQueue(completed_job, finished_queue);
+                    ready_queue = ready_queue->next;
+                }
+            }
         }
 
-        time_passed++;
-        // if no processes, break loop
+        if (time_passed >=30&&ready_queue==NULL)
+        {
+            printf("%s","ready Queue should be mt");
+            // this is temporary. we need to figure out what stops the program. cannot stop when no more instructions b/c there will still be internal events to handle
+            break;
+        }
     }
 }
-
 int main()
 {
-    // main will read in input and get the list of input.
-    // lines allocates room for 50 strings of length 100. our while condition keeps
-    // reading lines from the input file until the line is NULL(i.e. last line of file) andkeep adding
-    // the lines to the lines matrix which when the while condition false, holds all input lines
-    FILE *file = fopen("input.txt", "r");
-    char lines[50][100];
-    char buffer[100];
-    int number_of_strings = 0;
-    while (fgets(buffer, 100, file) != NULL)
-    {
-        strcpy(lines[number_of_strings], buffer);
-        number_of_strings++;
-    }
-    fclose(file);
 
-    schedule(lines, number_of_strings);
+    schedule();
 
     return 0;
 }
