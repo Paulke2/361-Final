@@ -1,21 +1,35 @@
-int bankers(struct process *processes, int requestingID, int requestedNum, int sys_memory){
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+struct process {
+   int processID;
+   int priority;
+   int burstTime;
+   int memoryRequested;
+   int maxDevices;
+   int allocatedDevices;
+   struct process *next;
+};
+int bankers(struct process *processes, int requestingID, int requestedNum, int available){
     int numProcesses = 0;
     struct process *temp = processes;
     while(temp != NULL){
         numProcesses++;
         temp = temp->next;
     }
-    int allocated[numProcesses], max[numProcesses], need[numProcesses];
-    int available = sys_memory;
+    int *allocated = malloc(numProcesses * sizeof(int));
+    int *max = malloc(numProcesses * sizeof(int));
+    int *need = malloc(numProcesses * sizeof(int));
     temp = processes;
     for(int i = 0; i < numProcesses; i++){
-        allocated[i] = temp->memoryRequested;
+        allocated[i] = temp->allocatedDevices;
         max[i] = temp->maxDevices;
         need[i] = max[i] - allocated[i];
         available -= allocated[i];
         temp = temp->next;
     }
-    int requesting = 0, requestedNum = 0;
+    int requesting = 0;
     for(int i = 0; i < numProcesses; i++){
         if(processes[i].processID == requestingID){
             requesting = i;
@@ -45,5 +59,6 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int s
         printf("%d ", safeSequence[i]);
     }
     printf("\n");
+    free(allocated);free(max);free(need);
     return 0;
 }

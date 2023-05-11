@@ -10,6 +10,7 @@ struct process {
    int burstTime;
    int memoryRequested;
    int maxDevices;
+   int allocatedDevices;
    struct process *next;
 };
 int getNumber(char command_instruction[50]){
