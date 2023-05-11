@@ -1,4 +1,27 @@
-int bankers(int requesting, int requestedNum, int numProcesses, int available, int *max, int *allocated, int *need){
+int bankers(struct process *processes, int requestingID, int requestedNum, int sys_memory){
+    int numProcesses = 0;
+    struct process *temp = processes;
+    while(temp != NULL){
+        numProcesses++;
+        temp = temp->next;
+    }
+    int allocated[numProcesses], max[numProcesses], need[numProcesses];
+    int available = sys_memory;
+    temp = processes;
+    for(int i = 0; i < numProcesses; i++){
+        allocated[i] = temp->memoryRequested;
+        max[i] = temp->maxDevices;
+        need[i] = max[i] - allocated[i];
+        available -= allocated[i];
+        temp = temp->next;
+    }
+    int requesting = 0, requestedNum = 0;
+    for(int i = 0; i < numProcesses; i++){
+        if(processes[i].processID == requestingID){
+            requesting = i;
+            break;
+        }
+    }
     int safeSequence[numProcesses], count = 0;
     if(allocated[requesting] + requestedNum > max[requesting]){
         printf("Error: Process %d is requesting more than its max resources.\n", requesting);
