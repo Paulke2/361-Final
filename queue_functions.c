@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -89,3 +90,32 @@ struct process *addToQueue(struct process *newJob, struct process *queue)
         return queue;
     }
 }
+
+struct process *addToQueueSJF(struct process *newJob, struct process *queue)
+//This queue is for Shortest Job First
+{
+    struct process *temp = queue;
+    if (temp == NULL || queue->burstTime >= newJob->burstTime)
+    {
+        //If the burst time of the new job is less than the burst time of the current head, new job
+        //becomes the new head of the queue
+        newJob->next = queue;
+        queue = newJob;
+        return queue;
+    }
+    else
+    {
+        while (temp->next != NULL && temp->next->burstTime < newJob->burstTime)
+        {
+            //Loops through queue until it finds where the new job burst time is less than the next
+            //process in the queue. 
+            temp = temp->next;
+        }
+        //Inserts new job where the burst time is less than the next process in the queue
+        newJob->next = temp->next;
+        temp->next = newJob;
+        return queue;
+    }
+}
+
+

@@ -12,5 +12,6 @@ struct process
 struct process *createNewProcess(char *token);
 struct process *duplicateProcess(struct process *queue);
 struct process *addToQueue(struct process *newJob, struct process *queue);
+struct process *addToQueueSJF(struct process *newJob, struct process *queue);
 void printQueue(struct process *queue);
 #endif /* QUEUE_FUNCTIONS_H_ */
