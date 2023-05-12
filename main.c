@@ -101,10 +101,9 @@ void schedule()
                         hold_queue2=addToQueue(newJob, hold_queue2);
                     }
                     else{
-                        //instead of adding to queue1 with addToQueue, create a method that accepts the same parameters as addToQueue, loop through hold_queue1, 
-                        //once curr->next->bursttime > newJob->burst_time, do something like newJob->next = curr->next. then curr->next=newJob. or some variation of inserting in the
-                        //middle of a linked list
-                        hold_queue1=addToQueue(newJob, hold_queue1);
+                        //If the job is priority 1, it will go on HQ1 using Shortest Job First;
+                        //See documentation in function definition
+                        hold_queue1=addToQueueSJF(newJob, hold_queue1);
                     }
                 }
             }
