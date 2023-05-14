@@ -6,6 +6,8 @@
 
 int getInternalEventTime(struct process *ready_queue,int quantum,int time_passed)
 {
+    //this function gets the time of the next internal event(i.e. running a job on the CPU). this time
+    //is then compared to the next instruction read time. internal events are prioritized.
     if(ready_queue==NULL){
         //if ready_queue mt, we need to read a new instruction so internal_event_time needs to be > next_instruction_time so we set internal_event_time to be arbitrary large number
         return 9999999;
@@ -44,13 +46,15 @@ void schedule()
     {
         if ((strcmp(buffer, "empty") == 0))
         {
-            // if the instruction read time has passed, and there is no outstanding instruction
+            //if the buffer is 'empty', indicating that an instruction has been read and a new one is
+            //abel to be read, buffer gets the next line from the file.
             fgets(buffer, 100, file);
+            printf(buffer);
         }
-        if (buffer == NULL)
+        if (strcmp(buffer, "D 9999")==0)
         {
+            //no more instructions to read
             next_instruction_time = 99999999;
-            printf("%s", "No more instructions to read");
         }
         char temp[100];
         strcpy(temp, buffer);
@@ -63,7 +67,7 @@ void schedule()
         internal_event_time=getInternalEventTime(ready_queue,quantum,time_passed);
         if (next_instruction_time < internal_event_time)
         {
-            // read new instruction
+            // sys. config instruction
             if (strcmp(instruction_type, "C") == 0)
             {
                 printf("-----Configuring----\n");
@@ -98,11 +102,15 @@ void schedule()
                 {
                     // if not enough mem. add to hold queue
                     if(newJob->priority==2){
+                        printf("adding %d to holdque2\n", newJob->processID);
+                        printf("needed mem: %d available: %d\n",newJob->memoryRequested,sys_memory-used_memory);
                         hold_queue2=addToQueue(newJob, hold_queue2);
                     }
                     else{
                         //If the job is priority 1, it will go on HQ1 using Shortest Job First;
                         //See documentation in function definition
+                        printf("adding  %d to holdque1\n", newJob->processID);
+                         printf("needed mem: %d available: %d\n",newJob->memoryRequested,sys_memory-used_memory);
                         hold_queue1=addToQueueSJF(newJob, hold_queue1);
                     }
                 }
@@ -133,10 +141,8 @@ void schedule()
                     ready_queue->burstTime = ready_queue->burstTime - quantum;
                     // now we need to bring head to tail
                     struct process *temp = duplicateProcess(ready_queue);
-                    //printf("jobNumber %d has %d run time left\n",ready_queue->processID,ready_queue->burstTime);
                     ready_queue=addToQueue(temp, ready_queue);
                     ready_queue = ready_queue->next;
-                    printQueue(ready_queue);
                 }
                 else
                 {
@@ -148,15 +154,45 @@ void schedule()
                     used_memory = used_memory - ready_queue->memoryRequested;
                     printf("finished Job number: %d\n",ready_queue->processID);
                     finished_queue=addToQueue(completed_job, finished_queue);
+                    struct process *temp =ready_queue;
+                    free(temp);
                     ready_queue = ready_queue->next;
+                    //checking holdqueues
+                    struct process *hold_queue1_temp=hold_queue1;
+                    struct process *hold_queue2_temp=hold_queue2;
+                    //check all of hold queue 1 if there is now enough memeory to put a process on ready queue
+                    while(hold_queue1_temp!=NULL){
+                        if(hold_queue1_temp->memoryRequested<=sys_memory-used_memory){
+                            struct process *process_to_add_to_readyQueue=duplicateProcess(hold_queue1_temp);
+                            addToQueue(process_to_add_to_readyQueue, ready_queue);
+                            used_memory=used_memory+process_to_add_to_readyQueue->memoryRequested;
+                            printf("removing process %d from HQ1. new mem is: %d\n",process_to_add_to_readyQueue->processID,sys_memory-used_memory);
+                            hold_queue1=removeProcess(hold_queue1,process_to_add_to_readyQueue->processID);
+                            printQueue(ready_queue);
+                        }
+                        hold_queue1_temp=hold_queue1_temp->next;
+                    }
+                      //check all of hold queue 2 after hold queue 1 if there is now enough memeory to put a process 
+                      //on ready queue
+                     while(hold_queue2_temp!=NULL){
+                        if(hold_queue2_temp->memoryRequested<=sys_memory-used_memory){
+                            struct process *process_to_add_to_readyQueue=duplicateProcess(hold_queue2_temp);
+                            addToQueue(process_to_add_to_readyQueue, ready_queue);
+                            used_memory=used_memory+process_to_add_to_readyQueue->memoryRequested;
+                            printf("removing process %d from HQ2. new mem is: %d\n",process_to_add_to_readyQueue->processID,sys_memory-used_memory);
+                            hold_queue2=removeProcess(hold_queue2,process_to_add_to_readyQueue->processID);
+                            printQueue(ready_queue);
+                        }
+                        hold_queue2_temp=hold_queue2_temp->next;
+                    }
                 }
             }
         }
 
-        if (time_passed >=30&&ready_queue==NULL)
+        if (strcmp(buffer, "D 9999")==0&&ready_queue==NULL)
         {
-            printf("%s","ready Queue should be mt");
-            // this is temporary. we need to figure out what stops the program. cannot stop when no more instructions b/c there will still be internal events to handle
+            // this is temporary. once ready_queue is NULL, we will let the program read the final d instruction.
+            //it is possible to have multiple simulations, so after final D, figure out how to read next lines
             break;
         }
     }
