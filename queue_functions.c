@@ -32,7 +32,7 @@ void printQueue(struct process *queue)
     printf("%s\n", "---------printing queue------");
     while (queue != NULL)
     {
-        printf("JobNumber:%d with remaining %d\n", queue->processID,queue->burstTime);
+        printf("JobNumber:%d with remaining %d\n", queue->processID,queue->burstTime-queue->accrued);
         queue = queue->next;
     }
     printf("%s\n", "----------------------------");
@@ -64,6 +64,7 @@ struct process *duplicateProcess(struct process *queue)
     temp->finish = queue->finish;
     temp->accrued = queue->accrued;
     temp->next = NULL;
+    temp->allocatedDevices=queue->allocatedDevices;
     return temp;
 }
 
@@ -100,6 +101,7 @@ struct process *createNewProcess(char *token, int next_instruction_time)
     newJob->arrival = next_instruction_time;
     newJob->finish = 0;
     newJob->accrued = 0;
+    newJob->allocatedDevices=0;
     newJob->next = NULL;
     return newJob;
 }
@@ -164,10 +166,12 @@ float avgTurnaroundTime(struct process *finished_queue)
     return sum / count;
 }
 
-int printAtTime(int time, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
+
+
+int printAtTime(int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
 // Prints current status of scheduler at a given time.
 {
-    printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory, devices);
+    printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices);
     printf("---------------------------------------------------------------------------\n");
     // Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.
     printf("Completed Jobs:\n");
@@ -197,6 +201,9 @@ int printAtTime(int time, int memory, int devices, struct process *hold_queue1, 
     printf("---------------------------------------------------------------------------\n");
     // Prints all  currently Ready Queue; TODO Needs Time Accrued value
     printf("Ready Queue: \n ---------------------------------\n");
+    if(ready_queue!=NULL&&ready_queue->next!=NULL){
+        ready_queue=ready_queue->next;
+    }
     while (ready_queue != NULL)
     {
         printf("Job ID: %d Run Time: %d Time Accrued: %d\n", ready_queue->processID, ready_queue->burstTime, ready_queue->accrued);
@@ -214,7 +221,9 @@ int printAtTime(int time, int memory, int devices, struct process *hold_queue1, 
     // Prints all process on CPU; TODO needs Time Accrued and Time Left value; currently time left
     // is burstTime-Accrued this will only work if burstTime is updated while on CPU (decreases with time on CPU)
     printf("Running on CPU: \n---------------------------------\n");
-    //printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued, (onCPU->burstTime - onCPU->accrued));
+    if(onCPU!=NULL){
+    printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-onCPU->arrival), (onCPU->burstTime - (onCPU->accrued+(time-onCPU->arrival))));
+    }
     printf("---------------------------------------------------------------------------\n");
     // Calculates the average turnaround time of the jobs on the finished queue
     //printf("System Turnaround Time: %d", avgTurnaroundTime(finished_queue));
