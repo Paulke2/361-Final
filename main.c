@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "bankers.h"
 #include "queue_functions.c"
 
 int getInternalEventTime(struct process *ready_queue, int quantum, int time_passed)
