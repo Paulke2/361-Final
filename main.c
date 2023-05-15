@@ -15,14 +15,14 @@ int getInternalEventTime(struct process *ready_queue, int quantum, int time_pass
     }
     else
     {
-        if (ready_queue->burstTime >= quantum)
+        if (ready_queue->accrued + quantum <= ready_queue->burstTime)
         {
             return time_passed + quantum;
         }
         else
         {
             // process will not finish quantum and we need to return curr time +remaining burstTime
-            return time_passed + ready_queue->burstTime;
+            return time_passed + (ready_queue->burstTime - ready_queue->accrued);
         }
     }
 }
@@ -46,9 +46,11 @@ void schedule()
     const char *empty = "empty";
     strcpy(buffer, empty);
     int next_instruction_time = 0;
+    bool update_flag = true;
     int internal_event_time = 99;
     while (true)
     {
+        // ill need an iner loop to calc. when to stop reading instructions. i should not be modifying time passed b/c reading instructions takes no time
         if ((strcmp(buffer, "empty") == 0))
         {
             // if the buffer is 'empty', indicating that an instruction has been read and a new one is
@@ -63,81 +65,102 @@ void schedule()
         strcpy(instruction_type, token);
         token = strtok(NULL, " ");
         next_instruction_time = atoi(token);
+        if (update_flag)
+        {
+            printf("updating\n");
+            internal_event_time = getInternalEventTime(ready_queue, quantum, time_passed);
+        }
+        update_flag = true;
+        if (next_instruction_time < 100)
+        {
+            printf("next internal time: %d\n", internal_event_time);
+            printf("next external time: %d\n", next_instruction_time);
+            printf("curr time: %d\n", time_passed);
+        }
 
-        internal_event_time = getInternalEventTime(ready_queue, quantum, time_passed);
         if (next_instruction_time < internal_event_time)
         {
-            // sys. config instruction
-            if (strcmp(instruction_type, "C") == 0)
+            if (next_instruction_time <= time_passed)
             {
-                printf("-----Configuring----\n");
-                token = strtok(NULL, " ");
-                sys_memory = getNumber(token);
-                printf("this is mem %d\n", sys_memory);
-                token = strtok(NULL, " ");
-                sys_serial_devices = getNumber(token);
-                printf("serial devices: %d\n", sys_serial_devices);
-                token = strtok(NULL, " ");
-                quantum = getNumber(token);
-                printf("quantum: %d\n", sys_serial_devices);
-                printf("------------------\n");
-                strcpy(buffer, empty);
-            }
-            else if (strcmp(instruction_type, "A") == 0)
-            {
-                struct process *newJob = createNewProcess(token, next_instruction_time);
-                strcpy(buffer, empty);
-                // determine if enough total mem.
-                if (newJob->memoryRequested > sys_memory)
+                // sys. config instruction
+                if (strcmp(instruction_type, "C") == 0)
                 {
-                    // discard job
+                    printf("-----Configuring----\n");
+                    token = strtok(NULL, " ");
+                    sys_memory = getNumber(token);
+                    printf("this is mem %d\n", sys_memory);
+                    token = strtok(NULL, " ");
+                    sys_serial_devices = getNumber(token);
+                    printf("serial devices: %d\n", sys_serial_devices);
+                    token = strtok(NULL, " ");
+                    quantum = getNumber(token);
+                    printf("quantum: %d\n", sys_serial_devices);
+                    printf("------------------\n");
+                    strcpy(buffer, empty);
                 }
-                else if (newJob->memoryRequested <= sys_memory - used_memory)
+                else if (strcmp(instruction_type, "A") == 0)
                 {
-                    // if their is enough mem. add job to ready_queue
-                    ready_queue = addToQueue(newJob, ready_queue);
-                    used_memory = used_memory + newJob->memoryRequested;
-                }
-                else
-                {
-                    // if not enough mem. add to hold queue
-                    if (newJob->priority == 2)
+                    struct process *newJob = createNewProcess(token, next_instruction_time);
+                    strcpy(buffer, empty);
+                    // determine if enough total mem.
+                    if (newJob->memoryRequested > sys_memory)
                     {
-                        hold_queue2 = addToQueue(newJob, hold_queue2);
+                        // discard job
+                    }
+                    else if (newJob->memoryRequested <= sys_memory - used_memory)
+                    {
+                        // if their is enough mem. add job to ready_queue
+                        ready_queue = addToQueue(newJob, ready_queue);
+                        used_memory = used_memory + newJob->memoryRequested;
                     }
                     else
                     {
-                        // If the job is priority 1, it will go on HQ1 using Shortest Job First;
-                        // See documentation in function definition
-                        printf("adding  %d to holdque1\n", newJob->processID);
-                        printf("needed mem: %d available: %d\n", newJob->memoryRequested, sys_memory - used_memory);
-                        hold_queue1 = addToQueueSJF(newJob, hold_queue1);
+                        // if not enough mem. add to hold queue
+                        if (newJob->priority == 2)
+                        {
+                            hold_queue2 = addToQueue(newJob, hold_queue2);
+                        }
+                        else
+                        {
+                            // If the job is priority 1, it will go on HQ1 using Shortest Job First;
+                            // See documentation in function definition
+                            printf("adding  %d to holdque1\n", newJob->processID);
+                            printf("needed mem: %d available: %d\n", newJob->memoryRequested, sys_memory - used_memory);
+                            hold_queue1 = addToQueueSJF(newJob, hold_queue1);
+                        }
                     }
+                    printQueue(ready_queue);
                 }
-            }
-            else if (strcmp(instruction_type, "Q") == 0)
-            {
-                // device request
-                strcpy(buffer, empty);
-            }
-            else if (strcmp(instruction_type, "L") == 0)
-            {
-                // device release request
-                strcpy(buffer, empty);
-            }
-            else
-            {
-                if (time_passed >= next_instruction_time)
+                else if (strcmp(instruction_type, "Q") == 0)
                 {
-                    printAtTime(next_instruction_time, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
+                    // device request
                     strcpy(buffer, empty);
-                    time_passed++;
+                    update_flag = false;
+                }
+                else if (strcmp(instruction_type, "L") == 0)
+                {
+                    // device release request
+                    strcpy(buffer, empty);
+                    update_flag = false;
                 }
                 else
                 {
-
-                    time_passed++;
+                    if (time_passed >= next_instruction_time)
+                    {
+                        //printAtTime(next_instruction_time, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
+                        strcpy(buffer, empty);
+                        time_passed++;
+                        update_flag = false;
+                    }
+                    else
+                    {
+                        update_flag = false;
+                        time_passed++;
+                    }
                 }
+            }else{
+                update_flag = false;
+                time_passed++;
             }
         }
         else
@@ -145,13 +168,11 @@ void schedule()
             // else process internal event. there are no more instructions that need to be read.
             if (ready_queue != NULL)
             {
-                if (ready_queue->burstTime - quantum > 0)
+                if (ready_queue->accrued + quantum < ready_queue->burstTime)
                 {
                     time_passed = time_passed + quantum;
+                    ready_queue->accrued = ready_queue->accrued + quantum;
                     printQueue(ready_queue);
-                    printf("curr time: %d\n", time_passed);
-                    ready_queue->burstTime = ready_queue->burstTime - quantum;
-                    ready_queue->finish = time_passed;
                     // now we need to bring head to tail
                     struct process *temp = duplicateProcess(ready_queue);
                     ready_queue = addToQueue(temp, ready_queue);
@@ -160,10 +181,8 @@ void schedule()
                 else
                 {
                     // job complete. job scheduler should check if holdqueue 1 process has enough mem. then check hold queue 2 if enough resources
-                    time_passed = time_passed + ready_queue->burstTime;
-                    printQueue(ready_queue);
-                    printf("curr time: %d\n", time_passed);
-                    ready_queue->burstTime = 0;
+                    time_passed = time_passed + (ready_queue->burstTime - ready_queue->accrued);
+                    ready_queue->accrued = ready_queue->accrued + (ready_queue->burstTime - ready_queue->accrued);
                     ready_queue->finish = time_passed;
                     struct process *completed_job = duplicateProcess(ready_queue);
                     // add ready_queue head to finished queue and remove process from ready_queue. release devices/mem. and check waitqueue for device requests
@@ -172,6 +191,7 @@ void schedule()
                     struct process *temp = ready_queue;
                     free(temp);
                     ready_queue = ready_queue->next;
+                    printQueue(ready_queue);
                     // checking holdqueues
                     struct process *hold_queue1_temp = hold_queue1;
                     struct process *hold_queue2_temp = hold_queue2;
@@ -206,7 +226,7 @@ void schedule()
             }
             else
             {
-                time_passed = time_passed + 1;
+                //------should probably check wait queue and hold queues
             }
         }
 
