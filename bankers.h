@@ -18,16 +18,13 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
         numProcesses++;
         temp = temp->next;
     }
-    int processIds[numProcesses];
-    while(temp != NULL){
-        processIds[numProcesses] = temp->processID;
-        temp = temp->next;
-    }
     int *allocated = malloc(numProcesses * sizeof(int));
     int *max = malloc(numProcesses * sizeof(int));
     int *need = malloc(numProcesses * sizeof(int));
+    struct process all_processes[numProcesses];
     temp = processes;
     for(int i = 0; i < numProcesses; i++){
+        all_processes[i] = *temp;
         allocated[i] = temp->allocatedDevices;
         max[i] = temp->maxDevices;
         need[i] = max[i] - allocated[i];
@@ -49,13 +46,12 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
     allocated[requesting] += requestedNum;
     need[requesting] -= requestedNum;
     available -= requestedNum;
-    for(int j = 0; j < numProcesses; j++){
+    for(int j = 0; j < numProcesses; j = next){
         for(int i = 0; i < numProcesses; i++){
             if(need[i] > available){
                 printf("Error: Process %d's request would deadlock.\n", requesting);
             }
             else if(need[i] <= available){
-                safeSequence[count++] = i;
                 available += allocated[i];
             }
             else{
@@ -68,7 +64,6 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
         printf("Error: System is in an unsafe state.\n");
         return -1;
     }
-    printf("Safe sequence: ");
     printf("\n");
     free(allocated);free(max);free(need);
     return 0;
