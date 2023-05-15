@@ -3,3 +3,5 @@ output/
 *.plist
 main.dSYM/Contents/Resources/DWARF/main
 main
+main.exe
+main.exe.stackdump
