@@ -135,7 +135,7 @@ void schedule()
                 }
                 else
                 {
-                    
+
                     time_passed++;
                 }
             }
@@ -148,10 +148,10 @@ void schedule()
                 if (ready_queue->burstTime - quantum > 0)
                 {
                     time_passed = time_passed + quantum;
-                    //printQueue(ready_queue);
-                    
+                    printQueue(ready_queue);
+                    printf("curr time: %d\n", time_passed);
                     ready_queue->burstTime = ready_queue->burstTime - quantum;
-                    ready_queue->finish=time_passed;
+                    ready_queue->finish = time_passed;
                     // now we need to bring head to tail
                     struct process *temp = duplicateProcess(ready_queue);
                     ready_queue = addToQueue(temp, ready_queue);
@@ -161,10 +161,10 @@ void schedule()
                 {
                     // job complete. job scheduler should check if holdqueue 1 process has enough mem. then check hold queue 2 if enough resources
                     time_passed = time_passed + ready_queue->burstTime;
-                    //printQueue(ready_queue);
-                    //printf("curr time: %d\n",time_passed);
+                    printQueue(ready_queue);
+                    printf("curr time: %d\n", time_passed);
                     ready_queue->burstTime = 0;
-                    ready_queue->finish=time_passed;
+                    ready_queue->finish = time_passed;
                     struct process *completed_job = duplicateProcess(ready_queue);
                     // add ready_queue head to finished queue and remove process from ready_queue. release devices/mem. and check waitqueue for device requests
                     used_memory = used_memory - ready_queue->memoryRequested;
