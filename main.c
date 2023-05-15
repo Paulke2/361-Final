@@ -85,7 +85,7 @@ void schedule()
             }
             else if (strcmp(instruction_type, "A") == 0)
             {
-                struct process *newJob = createNewProcess(token);
+                struct process *newJob = createNewProcess(token,next_instruction_time);
                 strcpy(buffer, empty);
                 // determine if enough total mem.
                 if (newJob->memoryRequested > sys_memory)
@@ -127,6 +127,7 @@ void schedule()
             }
             else
             {
+                
                 strcpy(buffer, empty);
             }
         }
