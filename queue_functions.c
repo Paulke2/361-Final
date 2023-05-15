@@ -5,22 +5,24 @@
 #include <stdbool.h>
 #include "queue_functions.h"
 
-struct process *duplicateProcess(struct process *queue)
+struct process *removeProcess(struct process *queue, int process_to_remove)
 {
-    struct process *temp = (struct process *)malloc(sizeof(struct process));
-    temp->processID = queue->processID;
-    temp->priority = queue->priority;
-    temp->burstTime = queue->burstTime;
-    temp->memoryRequested = queue->memoryRequested;
-    temp->maxDevices = queue->maxDevices;
-    //new instances
-    temp->arrival = queue->arrival;
-    temp->finish = queue->finish;
-    temp->accrued = queue->accrued;
-    temp->next = NULL;
+    struct process *temp = queue;
+    if(queue->processID==process_to_remove){
+       temp=queue->next;
+       free(queue);
+       return temp;
+    }
+    else{
+    while(queue->next->processID!=process_to_remove){
+        queue=queue->next;
+    }
+    }
+    struct process *temp_to_remove = queue->next;
+    queue->next=queue->next->next;
+    free(temp_to_remove);
     return temp;
 }
-
 
 void printQueue(struct process *queue)
 {
@@ -42,7 +44,23 @@ int getNumber(char command_instruction[50])
     }
     return atoi(temp);
 }
-struct process *createNewProcess(char *token)
+
+struct process *duplicateProcess(struct process *queue)
+{
+    struct process *temp = (struct process *)malloc(2+sizeof(struct process));
+    temp->processID = queue->processID;
+    temp->priority = queue->priority;
+    temp->burstTime = queue->burstTime;
+    temp->memoryRequested = queue->memoryRequested;
+    temp->maxDevices = queue->maxDevices;
+    temp->arrival = queue->arrival;
+    temp->finish = queue->finish;
+    temp->accrued = queue->accrued;
+    temp->next = NULL;
+    return temp;
+}
+
+struct process *createNewProcess(char *token, int next_instruction_time)
 {
     int job_number = 0;
     int process_mem = 0;
@@ -67,14 +85,14 @@ struct process *createNewProcess(char *token)
     priority = getNumber(token);
     printf("priority: %d\n", priority);
     printf("-----------------\n");
-    struct process *newJob = (struct process *)malloc(sizeof(struct process));
+    struct process *newJob = (struct process *)malloc(2+sizeof(struct process));
     newJob->processID = job_number;
     newJob->priority = priority;
     newJob->burstTime = burst_time;
     newJob->memoryRequested = process_mem;
     newJob->maxDevices = process_devices;
     //new instances
-    newJob->arrival = 0;
+    newJob->arrival = next_instruction_time;
     newJob->finish = 0;
     newJob->accrued = 0;
     newJob->next = NULL;

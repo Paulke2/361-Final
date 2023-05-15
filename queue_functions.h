@@ -7,13 +7,12 @@ struct process
     int burstTime;
     int memoryRequested;
     int maxDevices;
-    //new instances
     int arrival;
     int finish;
     int accrued;
     struct process *next;
 };
-struct process *createNewProcess(char *token);
+struct process *createNewProcess(char *token,int next_instruction_time);
 struct process *duplicateProcess(struct process *queue);
 struct process *addToQueue(struct process *newJob, struct process *queue);
 struct process *addToQueueSJF(struct process *newJob, struct process *queue);
