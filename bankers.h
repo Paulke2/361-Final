@@ -22,49 +22,48 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
     int *max = malloc(numProcesses * sizeof(int));
     int *need = malloc(numProcesses * sizeof(int));
     struct process all_processes[numProcesses];
+    int *finished = malloc(numProcesses * sizeof(int));
+    int *work = malloc(numProcesses * sizeof(int));
+    for(int i = 0; i < numProcesses; i++){
+        finished[i] = 0;
+        work[i] = available;
+    }
     temp = processes;
     for(int i = 0; i < numProcesses; i++){
         all_processes[i] = *temp;
         allocated[i] = temp->allocatedDevices;
         max[i] = temp->maxDevices;
         need[i] = max[i] - allocated[i];
-        available -= allocated[i];
+        if(temp->processID == requestingID){
+            need[i] -= requestedNum;
+            allocated[i] += requestedNum;
+            if(need[i] < 0){
+                printf("Unsafe state1\n");
+                return 1;
+            }
+        }
         temp = temp->next;
     }
-    int requesting = 0;
-    for(int i = 0; i < numProcesses; i++){
-        if(processes[i].processID == requestingID){
-            requesting = i;
-            break;
-        }
-    }
-    int safeSequence[numProcesses], count = 0;
-    if(allocated[requesting] + requestedNum > max[requesting]){
-        printf("Error: Process %d is requesting more than its max resources.\n", requesting);
-        return -1;
-    }
-    allocated[requesting] += requestedNum;
-    need[requesting] -= requestedNum;
-    available -= requestedNum;
-    for(int j = 0; j < numProcesses; j = next){
-        for(int i = 0; i < numProcesses; i++){
-            if(need[i] > available){
-                printf("Error: Process %d's request would deadlock.\n", requesting);
-            }
-            else if(need[i] <= available){
-                available += allocated[i];
-            }
-            else{
-                printf("Error: System is in an unsafe state.\n");
-                return -1;
+    for(int i = 0;i < numProcesses; i++){
+        for(int j = 0;j<numProcesses;j++){
+            if(finished[j] == 0 && need[j] <= work[j]){
+                work[j] += allocated[j];
+                need[j] = 0;
+                finished[j] = 1;
             }
         }
     }
-    if(count != numProcesses){
-        printf("Error: System is in an unsafe state.\n");
-        return -1;
+    for(int i = 0;i < numProcesses; i++){
+        if(finished[i] == 0){
+            printf("Unsafe state2\n");
+            return 1;
+        }
     }
-    printf("\n");
-    free(allocated);free(max);free(need);
+    free(allocated);
+    free(max);
+    free(need);
+    free(finished);
+    free(work);
+    printf("Safe state\n");
     return 0;
 }
