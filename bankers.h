@@ -2,15 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-struct process {
-   int processID;
-   int priority;
-   int burstTime;
-   int memoryRequested;
-   int maxDevices;
-   int allocatedDevices;
-   struct process *next;
-};
+#include "queue_functions.h"
 int bankers(struct process *processes, int requestingID, int requestedNum, int available){
     int numProcesses = 0;
     struct process *temp = processes;
