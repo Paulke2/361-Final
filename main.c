@@ -120,28 +120,27 @@ void schedule()
             {
                 int processID = getNumber(token);
                 int requestedNum = getNumber(token);
-                struct process *queue = hold_queue1;
+                struct process *queue = ready_queue;
                 if(bankers(queue, processID, requestedNum, sys_serial_devices) == 0){
                     while (queue != NULL){
                         if (queue->processID == processID){
                             queue->allocatedDevices = queue->allocatedDevices + requestedNum;
+                            sys_serial_devices -= requestedNum;
                             break;
                         }
                         if(queue->next != NULL){
                             queue = queue->next;
                         }
-                        if(queue->next == NULL){
-                            queue = hold_queue2;
-                        }
                     }
                     
                 }
                 else{
-                    while (ready_queue != NULL){
-                        if(processID == ready_queue->processID){
-                            wait_queue = addToQueue(ready_queue, wait_queue);
+                    while (queue != NULL){
+                        if(processID == queue->processID){
+                            wait_queue = addToQueue(queue, wait_queue);
+                            break;
                         }
-                        ready_queue = ready_queue->next;
+                        queue = queue->next;
                     }
                     
                 }
@@ -151,7 +150,25 @@ void schedule()
             else if (strcmp(instruction_type, "L") == 0){
                 int processID = getNumber(token);
                 int requestedNum = getNumber(token);
-                struct process *queue = hold_queue1;
+                struct process *queue = ready_queue;
+                int hold1 = 0;
+                while (queue != NULL){
+                    if (queue->processID == processID){
+                        queue->allocatedDevices = queue->allocatedDevices - requestedNum;
+                        sys_serial_devices += requestedNum;
+                        break;
+                    }
+                    if(queue->next != NULL){
+                        queue = queue->next;
+                    }
+                    else if(queue->next == NULL && hold1 == 0){
+                        queue = hold_queue1;
+                        hold1 = 1;
+                    }
+                    else if(queue->next == NULL){
+                        queue = hold_queue2;
+                    }
+                }
                 // device release request
                 strcpy(buffer, empty);
             }
