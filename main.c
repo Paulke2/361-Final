@@ -118,11 +118,40 @@ void schedule()
             }
             else if (strcmp(instruction_type, "Q") == 0)
             {
+                int processID = getNumber(token);
+                int requestedNum = getNumber(token);
+                struct process *queue = hold_queue1;
+                if(bankers(queue, processID, requestedNum, sys_serial_devices) == 0){
+                    while (queue != NULL){
+                        if (queue->processID == processID){
+                            queue->allocatedDevices = queue->allocatedDevices + requestedNum;
+                            break;
+                        }
+                        if(queue->next != NULL){
+                            queue = queue->next;
+                        }
+                        if(queue->next == NULL){
+                            queue = hold_queue2;
+                        }
+                    }
+                    
+                }
+                else{
+                    while (ready_queue != NULL){
+                        if(processID == ready_queue->processID){
+                            wait_queue = addToQueue(ready_queue, wait_queue);
+                        }
+                        ready_queue = ready_queue->next;
+                    }
+                    
+                }
                 // device request
                 strcpy(buffer, empty);
             }
-            else if (strcmp(instruction_type, "L") == 0)
-            {
+            else if (strcmp(instruction_type, "L") == 0){
+                int processID = getNumber(token);
+                int requestedNum = getNumber(token);
+                struct process *queue = hold_queue1;
                 // device release request
                 strcpy(buffer, empty);
             }
