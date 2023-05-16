@@ -8,6 +8,7 @@ struct process
     int memoryRequested;
     int maxDevices;
     int allocatedDevices;
+    int requestedDevices;
     int arrival;
     int finish;
     int accrued;
