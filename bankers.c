@@ -2,15 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-struct process {
-   int processID;
-   int priority;
-   int burstTime;
-   int memoryRequested;
-   int maxDevices;
-   int allocatedDevices;
-   struct process *next;
-};
+#include "queue_functions.h"
 int bankers(struct process *processes, int requestingID, int requestedNum, int available){
     int numProcesses = 0;
     struct process *temp = processes;
@@ -44,11 +36,11 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
         temp = temp->next;
     }
     //Here for debugging purposes
-    // int *p1need = &need[0];
-    // int *p2need = &need[1];
-    // int *p3need = &need[2];
-    // int *p4need = &need[3];
-    // int *avail = &work;
+    int *p1need = &need[0];
+    int *p2need = &need[1];
+    int *p3need = &need[2];
+    int *p4need = &need[3];
+    int *avail = &work;
     for(int i = 0;i < numProcesses; i++){
         for(int j = 0;j<numProcesses;j++){
             if(finished[j] == 0 && need[j] <= work){
