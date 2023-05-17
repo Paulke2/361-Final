@@ -36,10 +36,10 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
         temp = temp->next;
     }
     //Here for debugging purposes
-    int *p1need = &need[0];
-    int *p2need = &need[1];
-    int *p3need = &need[2];
-    int *p4need = &need[3];
+    // int *p1need = &need[0];
+    // int *p2need = &need[1];
+    // int *p3need = &need[2];
+    // int *p4need = &need[3];
     int *avail = &work;
     for(int i = 0;i < numProcesses; i++){
         for(int j = 0;j<numProcesses;j++){
