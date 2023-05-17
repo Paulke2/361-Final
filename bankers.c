@@ -40,7 +40,7 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
     // int *p2need = &need[1];
     // int *p3need = &need[2];
     // int *p4need = &need[3];
-    // int *avail = &work;
+    //int *avail = &work;
     for(int i = 0;i < numProcesses; i++){
         for(int j = 0;j<numProcesses;j++){
             if(finished[j] == 0 && need[j] <= work){
