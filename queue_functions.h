@@ -12,7 +12,6 @@ struct process
     int arrival;
     int finish;
     int accrued;
-    int allocatedDevices;
     struct process *next;
 };
 int bankers(struct process *processes, int requestingID, int requestedNum, int available);

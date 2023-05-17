@@ -227,10 +227,9 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     printf("Running on CPU: \n---------------------------------\n");
     if(onCPU!=NULL){
         if(time_passed!=0){
-            printf("timke passed: %d",time_passed);
     printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-time_passed), (onCPU->burstTime - (onCPU->accrued+(time-time_passed))));
         }else{
-           printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time_passed), (onCPU->burstTime - (onCPU->accrued+(time_passed)))); 
+           printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-onCPU->arrival), (onCPU->burstTime - (onCPU->accrued+(time-onCPU->arrival)))); 
         }
     }
     printf("---------------------------------------------------------------------------\n");

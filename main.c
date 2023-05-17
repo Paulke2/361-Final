@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "bankers.h"
+#include "bankers.c"
 #include "queue_functions.c"
 
 int getInternalEventTime(struct process *ready_queue, int quantum, int time_passed)
@@ -41,7 +41,9 @@ void schedule()
     int sys_memory = 0;
     int used_memory = 0;
     int sys_serial_devices = 0;
+    int used_sys_serial_devices=0;
     int quantum = 0;
+    int quantum_temp=0;
     int requestedNum;
     int processID;
     FILE *file = fopen("input.txt", "r");
@@ -54,6 +56,7 @@ void schedule()
     while (true)
     {
         internal_event_time = getInternalEventTime(ready_queue, quantum, time_passed);
+        quantum = quantum_temp;
         while (next_instruction_time < internal_event_time)
 
         {
@@ -87,6 +90,7 @@ void schedule()
                 printf("serial devices: %d\n", sys_serial_devices);
                 token = strtok(NULL, " ");
                 quantum = getNumber(token);
+                quantum_temp=quantum;
                 printf("quantum: %d\n", sys_serial_devices);
                 printf("------------------\n");
                 strcpy(buffer, empty);
@@ -133,14 +137,18 @@ void schedule()
                 processID = getNumber(token);
                 token = strtok(NULL, " ");
                 requestedNum = getNumber(token);
-                if(bankers(ready_queue, processID, requestedNum, sys_serial_devices) == 0){
-                    // If bankers returns 0, then the request is granted.
-                    ready_queue->requestedDevices = requestedNum;
+                //find process ID
+                struct process *temp = ready_queue;
+                if(temp!=NULL){
+                    if (temp->processID==processID){
+                        quantum=next_instruction_time-time_passed;
+                        internal_event_time=getInternalEventTime(ready_queue,quantum,time_passed);
+                    }
                 }
-                else{
-                    // If bankers returns 1, then the request is denied.
-                    wait_queue = addToQueue(ready_queue, wait_queue);                    
+                while(temp->processID!=processID){
+                    temp=temp->next;
                 }
+                temp->requestedDevices=requestedNum;
                 // device request
                 strcpy(buffer, empty);
             }
@@ -170,6 +178,7 @@ void schedule()
                     }
                 }
             }
+            printf("\n next internal time: %d",internal_event_time);
         }
 
         // else process internal event. there are no more instructions that need to be read.
@@ -179,18 +188,6 @@ void schedule()
             {
                 time_passed = internal_event_time;
                 ready_queue->accrued = ready_queue->accrued + quantum;
-                    ready_queue->allocatedDevices += ready_queue->requestedDevices;
-                    sys_serial_devices -= ready_queue->requestedDevices; 
-                    ready_queue->requestedDevices = 0;
-                    if(ready_queue->allocatedDevices == 0){
-                        struct process *temp = ready_queue;
-                        ready_queue = ready_queue->next;
-                        wait_queue = addToQueue(temp, wait_queue);
-                    }
-                    temp = ready_queue;
-                    while(temp != NULL){
-                        
-                    }
                 // now we need to bring head to tail
                 struct process *temp = duplicateProcess(ready_queue);
                 ready_queue = addToQueue(temp, ready_queue);
