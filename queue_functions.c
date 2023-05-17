@@ -127,6 +127,7 @@ struct process *addToQueueSJF(struct process *newJob, struct process *queue)
     }
 }
 
+<<<<<<< Updated upstream
 float avgTurnaroundTime(struct process *finished_queue){
     //simple averaging function using linked list; used to calculate system turnaround time
     int sum = 0;
@@ -143,13 +144,34 @@ int printAtTime(int time, int memory, int devices, struct process *hold_queue1, 
 //Prints current status of scheduler at a given time.
 {
     printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory, devices);
+=======
+int printAtTime(int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
+// Prints current status of scheduler at a given time.
+{
+    int *sum;
+    int *count;
+    sum = 0;
+    count = 0;
+    printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices);
+>>>>>>> Stashed changes
     printf("---------------------------------------------------------------------------\n");
     //Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.
     printf("Completed Jobs:\n");
+<<<<<<< Updated upstream
     while(finished_queue!=NULL){
         printf("Job ID: %d Arrival Time: %d Finish Time: %d Turn Around Time: %d\n",
         finished_queue->processID, finished_queue->arrival, finished_queue->finish, (finished_queue->finish - finished_queue->arrival));
         finished_queue=finished_queue->next;
+=======
+    while (finished_queue != NULL)
+    {
+        sum = sum + (finished_queue->finish - finished_queue->arrival);
+        count++;
+        printf("Job ID: %d Arrival Time: %d Finish Time: %d Turn Around Time: %d\n",
+               finished_queue->processID, finished_queue->arrival, finished_queue->finish, (finished_queue->finish - finished_queue->arrival));
+
+        finished_queue = finished_queue->next;
+>>>>>>> Stashed changes
     }
     printf("---------------------------------------------------------------------------\n");
     //Prints all currently Hold Queue 1
@@ -189,7 +211,21 @@ int printAtTime(int time, int memory, int devices, struct process *hold_queue1, 
         onCPU=onCPU->next;
     }
     printf("---------------------------------------------------------------------------\n");
+<<<<<<< Updated upstream
     //Calculates the average turnaround time of the jobs on the finished queue
     printf("System Turnaround Time: %d", avgTurnaroundTime(finished_queue));
+=======
+    // Calculates the average turnaround time of the jobs on the finished queue
+    if(count == 0){
+        printf("No jobs finished.");
+    }
+    else{
+        //Calculates Average Turnaround Time ; Ignore warnings
+        int temp = sum;
+        int temp2 = count;
+        float AvgTurnAroundTime = temp/temp2;
+        printf("System Turnaround Time: %f", AvgTurnAroundTime);
+    }
+>>>>>>> Stashed changes
     return 0;
     }
