@@ -42,6 +42,8 @@ void schedule()
     int used_memory = 0;
     int sys_serial_devices = 0;
     int quantum = 0;
+    int requestedNum;
+    int processID;
     FILE *file = fopen("input.txt", "r");
     char buffer[100];
     const char *empty = "empty";
@@ -126,13 +128,28 @@ void schedule()
                     }
                 }
             }
-            else if (strcmp(instruction_type, "Q") == 0)
-            {
+            else if (strcmp(instruction_type, "Q") == 0){
+                token = strtok(NULL, " ");
+                processID = getNumber(token);
+                token = strtok(NULL, " ");
+                requestedNum = getNumber(token);
+                if(bankers(ready_queue, processID, requestedNum, sys_serial_devices) == 0){
+                    // If bankers returns 0, then the request is granted.
+                    ready_queue->requestedDevices = requestedNum;
+                }
+                else{
+                    // If bankers returns 1, then the request is denied.
+                    wait_queue = addToQueue(ready_queue, wait_queue);                    
+                }
                 // device request
                 strcpy(buffer, empty);
             }
-            else if (strcmp(instruction_type, "L") == 0)
-            {
+            else if (strcmp(instruction_type, "L") == 0){
+                token = strtok(NULL, " ");
+                processID = getNumber(token);
+                token = strtok(NULL, " ");
+                requestedNum = getNumber(token);
+                ready_queue->requestedDevices = requestedNum;
                 // device release request
                 strcpy(buffer, empty);
             }
@@ -162,6 +179,18 @@ void schedule()
             {
                 time_passed = internal_event_time;
                 ready_queue->accrued = ready_queue->accrued + quantum;
+                    ready_queue->allocatedDevices += ready_queue->requestedDevices;
+                    sys_serial_devices -= ready_queue->requestedDevices; 
+                    ready_queue->requestedDevices = 0;
+                    if(ready_queue->allocatedDevices == 0){
+                        struct process *temp = ready_queue;
+                        ready_queue = ready_queue->next;
+                        wait_queue = addToQueue(temp, wait_queue);
+                    }
+                    temp = ready_queue;
+                    while(temp != NULL){
+                        
+                    }
                 // now we need to bring head to tail
                 struct process *temp = duplicateProcess(ready_queue);
                 ready_queue = addToQueue(temp, ready_queue);

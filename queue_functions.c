@@ -60,6 +60,8 @@ struct process *duplicateProcess(struct process *queue)
     temp->burstTime = queue->burstTime;
     temp->memoryRequested = queue->memoryRequested;
     temp->maxDevices = queue->maxDevices;
+    temp->allocatedDevices = queue->allocatedDevices;
+    temp->requestedDevices = queue->requestedDevices;
     temp->arrival = queue->arrival;
     temp->finish = queue->finish;
     temp->accrued = queue->accrued;
@@ -98,6 +100,8 @@ struct process *createNewProcess(char *token, int next_instruction_time)
     newJob->memoryRequested = process_mem;
     newJob->maxDevices = process_devices;
     // new instances
+    newJob->allocatedDevices = 0;
+    newJob->requestedDevices = 0;
     newJob->arrival = next_instruction_time;
     newJob->finish = 0;
     newJob->accrued = 0;

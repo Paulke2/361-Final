@@ -7,12 +7,15 @@ struct process
     int burstTime;
     int memoryRequested;
     int maxDevices;
+    int allocatedDevices;
+    int requestedDevices;
     int arrival;
     int finish;
     int accrued;
     int allocatedDevices;
     struct process *next;
 };
+int bankers(struct process *processes, int requestingID, int requestedNum, int available);
 struct process *createNewProcess(char *token,int next_instruction_time);
 struct process *duplicateProcess(struct process *queue);
 struct process *addToQueue(struct process *newJob, struct process *queue);
