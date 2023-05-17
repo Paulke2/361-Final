@@ -217,7 +217,11 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     // is burstTime-Accrued this will only work if burstTime is updated while on CPU (decreases with time on CPU)
     printf("Running on CPU: \n---------------------------------\n");
     if(onCPU!=NULL){
-    printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-onCPU->arrival), (onCPU->burstTime - (onCPU->accrued+(time-onCPU->arrival))));
+        if(time_passed!=0){
+    printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-time_passed), (onCPU->burstTime - (onCPU->accrued+(time-time_passed))));
+        }else{
+           printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-onCPU->arrival), (onCPU->burstTime - (onCPU->accrued+(time-onCPU->arrival)))); 
+        }
     }
     printf("---------------------------------------------------------------------------\n");
     // Calculates the average turnaround time of the jobs on the finished queue
