@@ -42,6 +42,8 @@ void schedule()
     int used_memory = 0;
     int sys_serial_devices = 0;
     int quantum = 0;
+    int requestedNum;
+    int processID;
     FILE *file = fopen("input.txt", "r");
     char buffer[100];
     const char *empty = "empty";
@@ -116,59 +118,28 @@ void schedule()
                     }
                 }
             }
-            else if (strcmp(instruction_type, "Q") == 0)
-            {
-                int processID = getNumber(token);
-                int requestedNum = getNumber(token);
-                struct process *queue = ready_queue;
-                if(bankers(queue, processID, requestedNum, sys_serial_devices) == 0){
-                    while (queue != NULL){
-                        if (queue->processID == processID){
-                            queue->allocatedDevices = queue->allocatedDevices + requestedNum;
-                            sys_serial_devices -= requestedNum;
-                            break;
-                        }
-                        if(queue->next != NULL){
-                            queue = queue->next;
-                        }
-                    }
-                    
+            else if (strcmp(instruction_type, "Q") == 0){
+                token = strtok(NULL, " ");
+                processID = getNumber(token);
+                token = strtok(NULL, " ");
+                requestedNum = getNumber(token);
+                if(bankers(ready_queue, processID, requestedNum, sys_serial_devices) == 0){
+                    // If bankers returns 0, then the request is granted.
+                    ready_queue->requestedDevices = requestedNum;
                 }
                 else{
-                    while (queue != NULL){
-                        if(processID == queue->processID){
-                            wait_queue = addToQueue(queue, wait_queue);
-                            break;
-                        }
-                        queue = queue->next;
-                    }
-                    
+                    // If bankers returns 1, then the request is denied.
+                    wait_queue = addToQueue(ready_queue, wait_queue);                    
                 }
                 // device request
                 strcpy(buffer, empty);
             }
             else if (strcmp(instruction_type, "L") == 0){
-                int processID = getNumber(token);
-                int requestedNum = getNumber(token);
-                struct process *queue = ready_queue;
-                int hold1 = 0;
-                while (queue != NULL){
-                    if (queue->processID == processID){
-                        queue->allocatedDevices = queue->allocatedDevices - requestedNum;
-                        sys_serial_devices += requestedNum;
-                        break;
-                    }
-                    if(queue->next != NULL){
-                        queue = queue->next;
-                    }
-                    else if(queue->next == NULL && hold1 == 0){
-                        queue = hold_queue1;
-                        hold1 = 1;
-                    }
-                    else if(queue->next == NULL){
-                        queue = hold_queue2;
-                    }
-                }
+                token = strtok(NULL, " ");
+                processID = getNumber(token);
+                token = strtok(NULL, " ");
+                requestedNum = getNumber(token);
+                ready_queue->requestedDevices = requestedNum;
                 // device release request
                 strcpy(buffer, empty);
             }
@@ -199,6 +170,18 @@ void schedule()
                     printf("curr time: %d\n", time_passed);
                     ready_queue->burstTime = ready_queue->burstTime - quantum;
                     ready_queue->finish = time_passed;
+                    ready_queue->allocatedDevices += ready_queue->requestedDevices;
+                    sys_serial_devices -= ready_queue->requestedDevices; 
+                    ready_queue->requestedDevices = 0;
+                    if(ready_queue->allocatedDevices == 0){
+                        struct process *temp = ready_queue;
+                        ready_queue = ready_queue->next;
+                        wait_queue = addToQueue(temp, wait_queue);
+                    }
+                    temp = ready_queue;
+                    while(temp != NULL){
+                        
+                    }
                     // now we need to bring head to tail
                     struct process *temp = duplicateProcess(ready_queue);
                     ready_queue = addToQueue(temp, ready_queue);
