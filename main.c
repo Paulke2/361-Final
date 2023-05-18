@@ -30,6 +30,7 @@ int getInternalEventTime(struct process *ready_queue, int quantum, int time_pass
 
 void schedule()
 {
+    //this is the main
     struct process *hold_queue1 = NULL;
     struct process *hold_queue2 = NULL;
     struct process *ready_queue = NULL;
@@ -142,6 +143,7 @@ void schedule()
                     {
                         quantum = next_instruction_time - time_passed;
                         temp->requestedDevices = requestedNum;
+                        printf("newtime %d\n",internal_event_time);
                     }
                 }
                 while (temp != NULL)
@@ -195,7 +197,7 @@ void schedule()
                 if (next_instruction_time < 9999)
                 {
                     // print
-                    printAtTime(used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
+                    printAtTime(used_sys_serial_devices,used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
                     strcpy(buffer, "empty");
                 }
                 else
@@ -251,7 +253,6 @@ void schedule()
                     // if its a device use request, this runs
                     if (bankers(ready_queue, ready_queue->processID, ready_queue->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
                     {
-                    
                         used_sys_serial_devices = used_sys_serial_devices + ready_queue->requestedDevices;
                         ready_queue->allocatedDevices = ready_queue->allocatedDevices + ready_queue->requestedDevices;
                         ready_queue->requestedDevices = 0;
@@ -262,6 +263,7 @@ void schedule()
                         struct process *deep_copy = duplicateProcess(ready_queue);
                         wait_queue = addToQueue(deep_copy, wait_queue);
                         ready_queue = removeProcess(ready_queue, deep_copy->processID);
+                        waited=true;
                     }
                 }
                 // now we need to bring head to tail
@@ -355,7 +357,7 @@ void schedule()
             // it is possible to have multiple simulations, so after final D, figure out how to read next lines
             FILE *temp_file = file;
 
-            printAtTime(used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
+            printAtTime(used_sys_serial_devices,used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
             if (fgets(buffer, 100, file) != NULL)
             {
                 hold_queue1 = NULL;

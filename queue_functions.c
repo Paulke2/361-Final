@@ -7,6 +7,8 @@
 
 struct process *removeProcess(struct process *queue, int process_to_remove)
 {
+    //this removes the process that has an ID that matches the int process_to_remove passed in as a parmeter and returns the head of the new list
+    //if the node is never found, the original list is retunred
     struct process *temp = queue;
     if (queue->processID == process_to_remove)
     {
@@ -18,6 +20,9 @@ struct process *removeProcess(struct process *queue, int process_to_remove)
     {
         while (queue->next->processID != process_to_remove)
         {
+            if(queue=NULL){
+                return temp;
+            }
             queue = queue->next;
         }
     }
@@ -29,6 +34,7 @@ struct process *removeProcess(struct process *queue, int process_to_remove)
 
 void printQueue(struct process *queue)
 {
+    //this was mainly for debugging. it prints the current order of the queue passed in as a parameter
     printf("%s\n", "---------printing queue------");
     while (queue != NULL)
     {
@@ -54,6 +60,7 @@ int getNumber(char command_instruction[50])
 
 struct process *duplicateProcess(struct process *queue)
 {
+    //this function duplicates a process but leaves the next pointer NULL so the list that the original node belongs to is not changed
     struct process *temp = (struct process *)malloc(2 + sizeof(struct process));
     temp->processID = queue->processID;
     temp->priority = queue->priority;
@@ -72,6 +79,7 @@ struct process *duplicateProcess(struct process *queue)
 
 struct process *createNewProcess(char *token, int next_instruction_time)
 {
+    //this creates a process with the given input
     int job_number = 0;
     int process_mem = 0;
     int maxDevices = 0;
@@ -90,8 +98,6 @@ struct process *createNewProcess(char *token, int next_instruction_time)
     burst_time=(int)burst_time;
     token = strtok(NULL, " ");
     priority = getNumber(token);
-    //printf("priority: %d\n", priority);
-    //printf("-----------------\n");
     struct process *newJob = (struct process *)malloc(2 + sizeof(struct process));
     newJob->processID = job_number;
     newJob->priority = priority;
@@ -110,6 +116,7 @@ struct process *createNewProcess(char *token, int next_instruction_time)
 
 struct process *addToQueue(struct process *newJob, struct process *queue)
 {
+    //this inserts the process newJob into the desired queue which is passed in as a parameter
     struct process *temp = queue;
     if (temp == NULL)
     {
@@ -172,6 +179,7 @@ float avgTurnaroundTime(struct process *finished_queue)
 }
 
 void deleteQueue(struct process *queue_to_delete){
+    //frees any memory when a new simulation starts. only used to clear the finished queue at the end of a simulation
     if(queue_to_delete==NULL){
         return;
     }
@@ -183,12 +191,12 @@ void deleteQueue(struct process *queue_to_delete){
     }
 }
 
-int printAtTime(int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
+int printAtTime(int used_devices,int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
 // Prints current status of scheduler at a given time.
 {
     int sum = 0;
     int count = 0;
-    printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices);
+    printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices-used_devices);
     printf("---------------------------------------------------------------------------\n");
     // Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.
     printf("Completed Jobs:\n");
@@ -250,10 +258,10 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     }
     printf("---------------------------------------------------------------------------\n");
     // Calculates the average turnaround time of the jobs on the finished queue
-    float turnaround=0;
+    float turnaround=0.0;
     if(count>0){
-        turnaround=sum/count;
+        turnaround=(float)sum/count;
     }
-    printf("System Turnaround Time: %.2f",turnaround);
+    printf("System Turnaround Time: %.2f\n\n",turnaround);
     return 0;
 }
