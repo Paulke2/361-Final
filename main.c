@@ -48,8 +48,7 @@ void schedule()
     int processID = 0;
     FILE *file = fopen("input.txt", "r");
     char buffer[100];
-    const char *empty = "empty";
-    strcpy(buffer, empty);
+    strcpy(buffer, "empty");
     int next_instruction_time = 0;
     bool updateFlag = true;
     bool test=false;
@@ -89,12 +88,13 @@ void schedule()
                 token = strtok(NULL, " ");
                 quantum = getNumber(token);
                 quantum_temp = quantum;
-                strcpy(buffer, empty);
+                strcpy(buffer, "empty");
+            
             }
             else if (strcmp(instruction_type, "A") == 0)
             {
                 struct process *newJob = createNewProcess(token, next_instruction_time);
-                strcpy(buffer, empty);
+                strcpy(buffer, "empty");
                 // determine if enough total mem.
                 if (newJob->memoryRequested > sys_memory)
                 {
@@ -157,7 +157,7 @@ void schedule()
                 // else not safe to give resources. we need to find it, then add it to wait queue.
 
                 // device request
-                strcpy(buffer, empty);
+                strcpy(buffer, "empty");
             }
             else if (strcmp(instruction_type, "L") == 0)
             {
@@ -186,9 +186,8 @@ void schedule()
                         }
                     }
                 }
-                // temp->requestedDevices=-requestedNum;
                 //  device release request
-                strcpy(buffer, empty);
+                strcpy(buffer, "empty");
             }
             else
             {
@@ -197,7 +196,7 @@ void schedule()
                 {
                     // print
                     printAtTime(used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
-                    strcpy(buffer, empty);
+                    strcpy(buffer, "empty");
                 }
                 else
                 {
@@ -225,14 +224,14 @@ void schedule()
 
                     // ready_queue->requestedDevices should be a negative number
                     used_sys_serial_devices = used_sys_serial_devices + ready_queue->requestedDevices;
+                    ready_queue->requestedDevices=0;
                     struct process *wait_temp = wait_queue;
                     // checking wait queues now that more devices freed
-
                     while (wait_temp != NULL)
                     {
                         struct process *temp = duplicateProcess(wait_temp);
                         ready_queue = addToQueue(temp, ready_queue);
-                        if (bankers(ready_queue, wait_temp->processID, ready_queue->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
+                        if (bankers(ready_queue, wait_temp->processID, wait_temp->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
                         {
                             wait_queue = removeProcess(wait_queue, temp->processID);
                             ready_queue = addToQueue(temp, ready_queue);
@@ -252,16 +251,10 @@ void schedule()
                     // if its a device use request, this runs
                     if (bankers(ready_queue, ready_queue->processID, ready_queue->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
                     {
-                        if(test){
-                            //after the second sim. its not working
-                    printAtTime(used_memory, next_instruction_time, time_passed, sys_memory, sys_serial_devices, hold_queue1, hold_queue2, ready_queue, wait_queue, finished_queue, ready_queue);
-                    break;
-                }
-                        struct process *temp = duplicateProcess(ready_queue);
-
-                        used_sys_serial_devices = used_sys_serial_devices + temp->requestedDevices;
-                        temp->allocatedDevices = temp->allocatedDevices + temp->requestedDevices;
-                        temp->requestedDevices = 0;
+                    
+                        used_sys_serial_devices = used_sys_serial_devices + ready_queue->requestedDevices;
+                        ready_queue->allocatedDevices = ready_queue->allocatedDevices + ready_queue->requestedDevices;
+                        ready_queue->requestedDevices = 0;
                     }
                     else
                     {
@@ -289,6 +282,7 @@ void schedule()
                 struct process *completed_job = duplicateProcess(ready_queue);
                 // add ready_queue head to finished queue and remove process from ready_queue. release devices/mem. and check waitqueue for device requests
                 used_sys_serial_devices = used_sys_serial_devices - ready_queue->allocatedDevices;
+                ready_queue->allocatedDevices=0;
                 used_memory = used_memory - ready_queue->memoryRequested;
                 finished_queue = addToQueue(completed_job, finished_queue);
                 struct process *temp = ready_queue;
@@ -368,6 +362,7 @@ void schedule()
                 hold_queue2 = NULL;
                 ready_queue = NULL;
                 wait_queue = NULL;
+                deleteQueue(finished_queue);
                 finished_queue = NULL;
                 next_instruction_time = 0;
                 updateFlag = true;
@@ -382,8 +377,6 @@ void schedule()
                 quantum_temp = 0;
                 requestedNum = 0;
                 processID = 0;
-                test=true;
-                break;
             }
             else
             {

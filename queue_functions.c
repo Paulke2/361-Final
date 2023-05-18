@@ -171,7 +171,17 @@ float avgTurnaroundTime(struct process *finished_queue)
     return sum / count;
 }
 
-
+void deleteQueue(struct process *queue_to_delete){
+    if(queue_to_delete==NULL){
+        return;
+    }
+    struct process *temp = queue_to_delete;
+    while(queue_to_delete!=NULL){
+        temp=queue_to_delete->next;
+        free(queue_to_delete);
+        queue_to_delete=temp;
+    }
+}
 
 int printAtTime(int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
 // Prints current status of scheduler at a given time.
