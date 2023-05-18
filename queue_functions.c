@@ -161,6 +161,9 @@ float avgTurnaroundTime(struct process *finished_queue)
     // simple averaging function using linked list; used to calculate system turnaround time
     int sum = 0;
     int count = 0;
+    if(finished_queue==NULL){
+        return 0;
+    }
     while (finished_queue != NULL)
     {
         sum = sum + (finished_queue->finish - finished_queue->arrival);
@@ -179,6 +182,7 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     printf("---------------------------------------------------------------------------\n");
     // Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.
     printf("Completed Jobs:\n");
+    struct process *temp=finished_queue;
     while (finished_queue != NULL)
     {
         printf("Job ID: %d Arrival Time: %d Finish Time: %d Turn Around Time: %d\n",
@@ -226,6 +230,7 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     // is burstTime-Accrued this will only work if burstTime is updated while on CPU (decreases with time on CPU)
     printf("Running on CPU: \n---------------------------------\n");
     if(onCPU!=NULL){
+        printf("\naccrued: %d\n",onCPU->accrued);
         if(time_passed!=0){
     printf("Job ID: %d Time Accrued: %d Time Left: %d\n", onCPU->processID, onCPU->accrued+(time-time_passed), (onCPU->burstTime - (onCPU->accrued+(time-time_passed))));
         }else{
@@ -234,6 +239,6 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     }
     printf("---------------------------------------------------------------------------\n");
     // Calculates the average turnaround time of the jobs on the finished queue
-    //printf("System Turnaround Time: %d", avgTurnaroundTime(finished_queue));
+    printf("System Turnaround Time: %d", avgTurnaroundTime(temp));
     return 0;
 }
