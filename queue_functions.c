@@ -178,6 +178,10 @@ float avgTurnaroundTime(struct process *finished_queue)
 int printAtTime(int used_memory,int time,int time_passed, int memory, int devices, struct process *hold_queue1, struct process *hold_queue2, struct process *ready_queue, struct process *wait_queue, struct process *finished_queue, struct process *onCPU)
 // Prints current status of scheduler at a given time.
 {
+    int *sum;
+    int *count;
+    sum = 0;
+    count = 0;
     printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices);
     printf("---------------------------------------------------------------------------\n");
     // Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.
@@ -185,8 +189,11 @@ int printAtTime(int used_memory,int time,int time_passed, int memory, int device
     struct process *temp=finished_queue;
     while (finished_queue != NULL)
     {
+        sum = sum + (finished_queue->finish - finished_queue->arrival);
+        count++;
         printf("Job ID: %d Arrival Time: %d Finish Time: %d Turn Around Time: %d\n",
                finished_queue->processID, finished_queue->arrival, finished_queue->finish, (finished_queue->finish - finished_queue->arrival));
+
         finished_queue = finished_queue->next;
     }
     printf("---------------------------------------------------------------------------\n");
