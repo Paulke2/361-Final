@@ -196,6 +196,7 @@ int printAtTime(int used_devices,int used_memory,int time,int time_passed, int m
 {
     int sum = 0;
     int count = 0;
+    printf("curr time: %d",time_passed);
     printf("At Time %d: \nCurrent Available Main Memory=%d \nCurrent Devices=%d \n", time, memory-used_memory, devices-used_devices);
     printf("---------------------------------------------------------------------------\n");
     // Prints all of the finish jobs. TODO Jobs need Arrival Time and Finish Time  to show correct values.

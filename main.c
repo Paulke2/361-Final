@@ -56,11 +56,16 @@ void schedule()
     int internal_event_time = 99;
     while (true)
     {
-        internal_event_time = getInternalEventTime(ready_queue, quantum, time_passed);
         quantum = quantum_temp;
+        internal_event_time = getInternalEventTime(ready_queue, quantum, time_passed);
+        
         while (next_instruction_time < internal_event_time)
 
         {
+            if(next_instruction_time!=9999){
+            printf("instruction time:%d\n",next_instruction_time);
+            printf("internal time:%d\n",internal_event_time);
+            }
             if ((strcmp(buffer, "empty") == 0))
             {
                 // if the buffer is 'empty', indicating that an instruction has been read and a new one is
@@ -136,13 +141,14 @@ void schedule()
                 requestedNum = getNumber(token);
                 // find process ID
                 struct process *temp = ready_queue;
-
                 if (temp != NULL)
                 {
                     if (temp->processID == processID)
                     {
                         quantum = next_instruction_time - time_passed;
                         temp->requestedDevices = requestedNum;
+                        printf("Quantum: %d\n",quantum);
+                        internal_event_time=getInternalEventTime(ready_queue, quantum, time_passed);
                         printf("newtime %d\n",internal_event_time);
                     }
                 }
@@ -174,6 +180,7 @@ void schedule()
                     if (temp->processID == processID)
                     {
                         quantum = next_instruction_time - time_passed;
+                        internal_event_time=getInternalEventTime(ready_queue, quantum, time_passed);
                         temp->requestedDevices = -requestedNum;
                     }
                     else
