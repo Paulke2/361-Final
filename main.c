@@ -220,6 +220,8 @@ void schedule()
         // else process internal event. there are no more instructions that need to be read.
         if (ready_queue != NULL)
         {
+            printQueue(ready_queue);
+            printf("timePadded %d\n",internal_event_time);
             bool waited = false;
             if (ready_queue->accrued + quantum < ready_queue->burstTime)
             {
@@ -233,7 +235,11 @@ void schedule()
 
                     // ready_queue->requestedDevices should be a negative number
                     used_sys_serial_devices = used_sys_serial_devices + ready_queue->requestedDevices;
+
+                    printf("REQESTED: %d HELD: %d\n",ready_queue->requestedDevices,ready_queue->maxDevices);
+                    ready_queue->allocatedDevices=ready_queue->allocatedDevices+ready_queue->requestedDevices;
                     ready_queue->requestedDevices=0;
+                    printf("REQESTED: %d HELD: %d\n",ready_queue->requestedDevices,ready_queue->maxDevices);
                     struct process *wait_temp = wait_queue;
                     // checking wait queues now that more devices freed
                     while (wait_temp != NULL)
@@ -308,7 +314,14 @@ void schedule()
                     {
                         struct process *temp = duplicateProcess(wait_temp);
                         ready_queue = addToQueue(temp, ready_queue);
-                        if (bankers(ready_queue, wait_temp->processID, ready_queue->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
+                        if(ready_queue->next==NULL && (temp->requestedDevices+temp->allocatedDevices<=sys_serial_devices)){
+                            used_sys_serial_devices+=temp->requestedDevices;
+                            temp->allocatedDevices=temp->requestedDevices;
+                            temp->requestedDevices=0;
+                            wait_queue = removeProcess(wait_queue, temp->processID);
+
+                        }
+                        else if (bankers(ready_queue, wait_temp->processID, ready_queue->requestedDevices, sys_serial_devices - used_sys_serial_devices) == 0)
                         {
                             wait_queue = removeProcess(wait_queue, temp->processID);
                             used_sys_serial_devices = used_sys_serial_devices + temp->requestedDevices;
@@ -317,6 +330,7 @@ void schedule()
                         }
                         else
                         {
+                            printf("unsafe: requested: %d avail: %d allocated: %d\n",temp->requestedDevices,sys_serial_devices,temp->allocatedDevices);
                             ready_queue = removeProcess(ready_queue, temp->processID);
                         }
                         wait_temp = wait_temp->next;
