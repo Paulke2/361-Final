@@ -29,7 +29,6 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
             need[i] -= requestedNum;
             allocated[i] += requestedNum;
             if(need[i] < 0){
-                printf("\nProcess:%d is unsafe",requestingID);
                 return 1;
             }
         }
@@ -53,7 +52,6 @@ int bankers(struct process *processes, int requestingID, int requestedNum, int a
 
     for(int i = 0;i < numProcesses; i++){
         if(finished[i] == 0){
-            printf("\nProcess:%d is unsafe: availible: %d",requestingID,available);
             return 1;
         }
     }
