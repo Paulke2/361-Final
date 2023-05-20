@@ -7,4 +7,6 @@ first put the desired input in input.txt
 then in your terminal, run <gcc main.c>
 then once again in your terminal, run <./a.exe>
 
-What should my input be?
+input: the input should be a set of instructions that tell our simulated operating system what to do. the 'D' instruction prints the current state of the CPU.
+
+output: the output will be the state of the CPU after each process terminates.
